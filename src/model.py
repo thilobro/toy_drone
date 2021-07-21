@@ -11,7 +11,7 @@ class ToyDroneModel():
     def __init__(self, parameters):
         self._parameters = parameters
         self._state = np.zeros(6)
-        self._controls =  np.zeros(2)
+        self._controls = np.zeros(2)
         self._build_model_functions()
         # state consists of 2 positions, 2 velocities, 1 angle, one angular velocity
         # controls consists of 2 forces
@@ -20,7 +20,7 @@ class ToyDroneModel():
         state = ca.SX.sym("state", 6)
         controls = ca.SX.sym("controls", 2)
         # TODO: how to manage disturbance states?
-        disturbancce_state = ca.SX.sym("disturbance_state", 9)
+        # disturbancce_state = ca.SX.sym("disturbance_state", 9)
 
         self._ode = self._build_ode(state, controls)
         self._disturbed_ode = self._build_disturbed_ode(state, controls)
@@ -33,10 +33,9 @@ class ToyDroneModel():
         # TODO: build ode with disturbance states, acceleration and torque disturbance
         disturbances = ca.SX.sym("disturbances", 3)
         disturbed_state = ca.vertcat(state, disturbances)
-        disturbed_ode = ca.Function("disturbed_ode",
-                                          [disturbed_state, controls],
-                                          [ca.vertcat(self._ode(disturbed_state[:-3],
-                                                                controls), 0, 0, 0)])
+        disturbed_ode = ca.Function("disturbed_ode", [disturbed_state, controls],
+                                    [ca.vertcat(self._ode(disturbed_state[:-3],
+                                                          controls), 0, 0, 0)])
         return disturbed_ode
 
     def _build_ode(self, state, controls):
@@ -47,7 +46,8 @@ class ToyDroneModel():
         dposition = velocity
         dvelocity = 1.0/self._parameters["mass"] * ((controls[0] + controls[1])
                                                     * ca.vertcat(ca.sin(angle), -ca.cos(angle))
-                                                    + ca.vertcat(0, self._parameters["gravity"]))
+                                                    + ca.vertcat(0, self._parameters["mass"]
+                                                                 * self._parameters["gravity"]))
         dangle = angular_velocity
         dangular_velocity = 1.0/self._parameters["moment_of_inertia"]\
             * self._parameters["arm_length"] * (controls[0] - controls[1])
