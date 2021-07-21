@@ -31,7 +31,7 @@ controller = Controller(lqr.compute_control, feedforward_law)
 initial_state = np.zeros(6)
 initial_controls = np.zeros(2)
 state_covariance = 1e-3 * np.eye(6)
-sensor_covariance = 1e-6 * np.eye(6)
+sensor_covariance = 1e-6 * np.eye(5)
 state_model = drone.get_ode()
 sensor_model = drone.get_sensor_model()
 state_jacobian = drone.get_state_jacobian()
@@ -45,7 +45,6 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
 for i in range(N - 1):
     error = state_data[i] - np.array([1, 1, 0, 0, 0, 0])
     controls = controller.compute_controls(error)
-    # state_data[i + 1] = drone.make_step(controls, dt)
     drone.make_step(controls, dt)
 
     sensor_values = drone.get_sensor_values()

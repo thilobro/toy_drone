@@ -57,13 +57,12 @@ class ToyDroneModel():
 
     def _build_sensor_model(self, state, controls):
         # GPS + gyro + accelerometer
-        # angle = state[4]
-        # acceleration = 1.0/self._parameters["mass"] * ((controls[0] + controls[1])
-        #                                                * ca.vertcat(ca.sin(angle), -ca.cos(angle))
-        #                                                + ca.vertcat(0, self._parameters["gravity"]))
-        # sensor_values = ca.vertcat(state[:2], state[5], acceleration)
-        # return ca.Function("sensor_model", [state, controls], [sensor_values])
-        return ca.Function("sensor_model", [state, controls], [state])
+        angle = state[4]
+        acceleration = 1.0/self._parameters["mass"] * ((controls[0] + controls[1])
+                                                       * ca.vertcat(ca.sin(angle), -ca.cos(angle))
+                                                       + ca.vertcat(0, self._parameters["gravity"]))
+        sensor_values = ca.vertcat(state[:2], state[5], acceleration)
+        return ca.Function("sensor_model", [state, controls], [sensor_values])
 
     def _build_state_jacobian(self, state, controls):
         return ca.Function("state_jacobian", [state, controls],
