@@ -2,7 +2,7 @@
 
 import casadi as ca
 import numpy as np
-from utils import rk4
+from toy_drone.utils import rk4
 
 
 class ToyDroneModel():

@@ -1,9 +1,9 @@
 import numpy as np
-from model import ToyDroneModel
-from lqr import Lqr
-from controller import Controller
-from extended_kalman_filter import ExtendedKalmanFilter
-from plotting import plot_drone_trajectory
+from toy_drone.model import ToyDroneModel
+from toy_drone.lqr import Lqr
+from toy_drone.controller import Controller
+from toy_drone.extended_kalman_filter import ExtendedKalmanFilter
+from toy_drone.plotting import plot_drone_trajectory
 
 
 parameters = {"mass": 10, "moment_of_inertia": 0.1, "arm_length": 0.1,
