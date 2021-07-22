@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 from model import ToyDroneModel
 from lqr import Lqr
 from controller import Controller
 from extended_kalman_filter import ExtendedKalmanFilter
+from plotting import plot_drone_trajectory
 
 
 parameters = {"mass": 10, "moment_of_inertia": 0.1, "arm_length": 0.1,
@@ -58,24 +57,4 @@ for i in range(N - 1):
     kalman_filter.input_measurement(sensor_values)
     estimated_state_data[i + 1] = kalman_filter.get_estimate()
 
-
-fig, ax = plt.subplots(1)
-ax.plot(state_data[:, 0], -state_data[:, 1], alpha=0.2)
-ts = ax.transData
-for i in range(0, N, 20):
-    pos_x = state_data[i, 0]
-    pos_z = -state_data[i, 1]
-    vel_x = state_data[i, 2] * 1e-1
-    vel_z = -state_data[i, 3] * 1e-1
-    angle = state_data[i, 4]
-    att_x = 0.1 * np.sin(angle)
-    att_z = 0.1 * np.cos(angle)
-    circle_position = mpatches.Circle((pos_x, pos_z), radius=0.01, color='g')
-    arrow_speed = mpatches.FancyArrowPatch((pos_x, pos_z), (pos_x + vel_x, pos_z + vel_z), arrowstyle='->', color='r', mutation_scale=2)
-    arrow_attitude = mpatches.FancyArrowPatch((pos_x, pos_z), (pos_x + att_x, pos_z + att_z), arrowstyle='->', color='k', mutation_scale=2)
-    ax.add_patch(circle_position)
-    ax.add_patch(arrow_speed)
-    ax.add_patch(arrow_attitude)
-ax.plot(reference_data[:, 0], -reference_data[:, 1], '--')
-ax.set_aspect('equal')
-plt.show()
+plot_drone_trajectory(state_data, reference_data)
