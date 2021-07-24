@@ -10,15 +10,21 @@ class Nmpc():
         self._state_dim = model.get_state_dim()
         self._controls_dim = model.get_controls_dim()
         self._dt = 1e-1
-        self._horizon = 5
+        self._horizon = 10
         self._ocp = self.build_ocp()
-
+        self._V_initial = np.zeros((self._state_dim + self._controls_dim) * (self._horizon - 1))
     def model_step(self, state, controls):
         return rk4(self._ode, state, controls, self._dt)
 
     @staticmethod
-    def running_cost(state, reference):
-        return ca.dot(state[:2] - reference[:2], state[:2] - reference[:2])
+    def running_cost(state, controls, dcontrols, reference):
+        controls = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2])\
+            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1e-2\
+            + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 1e-2\
+            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1e-1\
+            + ca.dot(dcontrols, dcontrols) * 1e-6\
+            + ca.dot(controls, controls) * 1e-6
+        return controls
 
     def build_ocp(self):
         ocp_variables = []
@@ -35,7 +41,10 @@ class Nmpc():
 
             # build cost function
             params += [ca.SX.sym(f'ref{i}', self._state_dim)]
-            cost_function += self.running_cost(ocp_variables[i][:self._state_dim], params[i])
+            cost_function += self.running_cost(ocp_variables[i][:self._state_dim],
+                                               ocp_variables[i][self._state_dim:],
+                                               ocp_variables[i][self._state_dim:] - ocp_variables[i-1][self._state_dim:],
+                                               params[i])
 
             # build MS constraints
             equality_constraints += [self.model_step(ocp_variables[i - 1][:self._state_dim],
@@ -53,8 +62,10 @@ class Nmpc():
 
     def compute_control(self, state, reference):
         # solve OCP
-        optimal_trajectory = self._solver(
-            x0=np.zeros((self._state_dim + self._controls_dim) * (self._horizon - 1)),
-            p=np.hstack((state, reference)), ubg=0, lbg=0)
+        optimal_trajectory = self._solver(x0=self._V_initial,
+                                          p=np.hstack((state, reference)), ubg=0, lbg=0)
+        # extract V_initial for next iteration
+        self._V_initial = optimal_trajectory['x'][:((self._state_dim + self._controls_dim)*(self._horizon - 1))]
+        print(optimal_trajectory['x'])
         # extract first controls
         return optimal_trajectory['x'][self._state_dim:self._state_dim + self._controls_dim]

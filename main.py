@@ -7,9 +7,10 @@ from toy_drone.plotting import plot_drone_trajectory
 from toy_drone.nmpc import Nmpc
 
 
-parameters = {"mass": 10, "moment_of_inertia": 0.1, "arm_length": 0.1,
+parameters = {"mass": 1, "moment_of_inertia": 10, "arm_length": 0.1,
               "gravity": 9.81, "max_force_input": 1000}
 hover_force = (parameters["mass"] * parameters["gravity"])/2.0
+print(hover_force)
 N = 1000
 state_data = np.zeros([N, 6])
 estimated_state_data = np.zeros([N, 6])
@@ -47,15 +48,20 @@ nmpc = Nmpc(drone)
 # print(optimal_sol)
 
 reference_data = np.zeros([N, 6])
-# reference_data[:, 0] = np.sin(np.linspace(0, 2 * np.pi, N))
-# reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N))
+control_data = np.zeros([N, 2])
+reference_data[:, 1] = np.linspace(0, -10, N)
+# reference_data[:, 0] = np.linspace(0, 0.2, N)
+reference_data[:, 0] = np.sin(np.linspace(0, 1 * np.pi, N))
+reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
 
 # TODO: write unit tests
 
-for i in range(N - 3):
+for i in range(N - 10):
+# for i in range(2):
     # error = estimated_state_data[i] - reference_data[i]
     # controls = controller.compute_controls(error)
-    controls = nmpc.compute_control(estimated_state_data[i], reference_data[i:i+3].flatten())
+    controls = nmpc.compute_control(estimated_state_data[i], reference_data[i:i+8].flatten())
+    control_data[i] = controls.full().squeeze()
     print(controls)
     state_data[i + 1] = drone.make_step(controls, dt)
 
@@ -65,3 +71,7 @@ for i in range(N - 3):
     estimated_state_data[i + 1] = kalman_filter.get_estimate()
 
 plot_drone_trajectory(state_data, reference_data)
+import matplotlib.pyplot as plt
+plt.plot(control_data[:, 0])
+plt.plot(control_data[:, 1])
+plt.show()
