@@ -4,6 +4,7 @@ from toy_drone.lqr import Lqr
 from toy_drone.controller import Controller
 from toy_drone.extended_kalman_filter import ExtendedKalmanFilter
 from toy_drone.plotting import plot_drone_trajectory
+from toy_drone.nmpc import Nmpc
 
 
 parameters = {"mass": 10, "moment_of_inertia": 0.1, "arm_length": 0.1,
@@ -41,6 +42,9 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
                                      sensor_covariance, state_model, sensor_model,
                                      state_jacobian, sensor_jacobian, dt)
 
+nmpc = Nmpc(drone)
+nmpc.compute_control(np.zeros(6), np.zeros(6 * 3))
+
 reference_data = np.zeros([N, 6])
 reference_data[:, 0] = np.sin(np.linspace(0, 2 * np.pi, N))
 reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N))
@@ -48,8 +52,9 @@ reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N))
 # TODO: write unit tests
 
 for i in range(N - 1):
-    error = estimated_state_data[i] - reference_data[i]
-    controls = controller.compute_controls(error)
+    # error = estimated_state_data[i] - reference_data[i]
+    # controls = controller.compute_controls(error)
+    controls = nmpc.compute_control(estimated_state_data[i], reference_data[i])
     state_data[i + 1] = drone.make_step(controls, dt)
 
     sensor_values = drone.get_sensor_values()

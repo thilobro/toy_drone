@@ -9,6 +9,8 @@ class ToyDroneModel():
     # TODO: docstrings
 
     def __init__(self, parameters):
+        self._state_dim = 6
+        self._controls_dim = 2
         self._parameters = parameters
         self._state = np.zeros(6)
         self._controls = np.zeros(2)
@@ -17,8 +19,8 @@ class ToyDroneModel():
         # controls consists of 2 forces
 
     def _build_model_functions(self):
-        state = ca.SX.sym("state", 6)
-        controls = ca.SX.sym("controls", 2)
+        state = ca.SX.sym("state", self._state_dim)
+        controls = ca.SX.sym("controls", self._controls_dim)
         # TODO: how to manage disturbance states?
         # disturbancce_state = ca.SX.sym("disturbance_state", 9)
 
@@ -98,3 +100,9 @@ class ToyDroneModel():
 
     def get_sensor_jacobian(self):
         return self._sensor_jacobian
+
+    def get_state_dim(self):
+        return self._state_dim
+
+    def get_controls_dim(self):
+        return self._controls_dim
