@@ -9,16 +9,16 @@ class Nmpc():
         self._ode = model.get_ode()
         self._state_dim = model.get_state_dim()
         self._controls_dim = model.get_controls_dim()
-        self._dt = 1e-3
+        self._dt = 1e-1
         self._horizon = 5
         self._ocp = self.build_ocp()
 
     def model_step(self, state, controls):
-        return rk4(self._ode, state, controls, 1e-3)
+        return rk4(self._ode, state, controls, self._dt)
 
     @staticmethod
     def running_cost(state, reference):
-        return ca.dot(state - reference, state - reference)
+        return ca.dot(state[:2] - reference[:2], state[:2] - reference[:2])
 
     def build_ocp(self):
         ocp_variables = []
@@ -55,6 +55,6 @@ class Nmpc():
         # solve OCP
         optimal_trajectory = self._solver(
             x0=np.zeros((self._state_dim + self._controls_dim) * (self._horizon - 1)),
-            p=np.hstack((state, reference)))
+            p=np.hstack((state, reference)), ubg=0, lbg=0)
         # extract first controls
-        return optimal_trajectory['x'][self._state_dim:self._controls_dim]
+        return optimal_trajectory['x'][self._state_dim:self._state_dim + self._controls_dim]
