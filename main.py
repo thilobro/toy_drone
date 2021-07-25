@@ -10,8 +10,9 @@ from toy_drone.nmpc import Nmpc
 
 
 parameters = {"mass": 1, "moment_of_inertia": 1, "arm_length": 1,
-              "gravity": 9.81, "max_force_input": 1000}
+              "gravity": 9.81, "max_force_input": None}
 hover_force = (parameters["mass"] * parameters["gravity"])/2.0
+parameters["max_force_input"] = hover_force * 1.5
 N = 1000
 state_data = np.zeros([N, 6])
 estimated_state_data = np.zeros([N, 6])
@@ -49,7 +50,8 @@ Q = np.diag([1, 1, 0, 0, 0, 1e-3])
 Q_term = np.diag([1, 1, 1, 1, 1, 1])
 R = np.diag([1, 1]) * 1e-6
 dR = np.diag([1, 1]) * 1e-2
-nmpc = Nmpc(drone, Q, Q_term, R, dR, dt, N_nmpc)
+control_bounds = [0, parameters["max_force_input"]]
+nmpc = Nmpc(drone, Q, Q_term, R, dR, control_bounds, dt, N_nmpc)
 
 reference_data = np.zeros([N + N_nmpc, 6])
 control_data = np.zeros([N - 1, 2])

@@ -6,10 +6,11 @@ from toy_drone.utils import rk4
 class Nmpc():
     # TODO: docstrings
     def __init__(self, model, state_running_cost, state_terminal_cost,
-                 control_running_cost, dcontrol_running_cost, dt, N):
+                 control_running_cost, dcontrol_running_cost, control_bounds, dt, N):
         self._ode = model.get_ode()
         self._state_dim = model.get_state_dim()
         self._controls_dim = model.get_controls_dim()
+        self._control_bounds = control_bounds
         self._dt = dt
         self._horizon = N
         self._Q = state_running_cost
@@ -82,10 +83,10 @@ class Nmpc():
 
     def compute_control(self, state, reference):
         # solve OCP
-        lbx = [-ca.inf] * self._state_dim + [0] * self._controls_dim
+        lbx = [-ca.inf] * self._state_dim + [self._control_bounds[0]] * self._controls_dim
         lbx = lbx * (self._horizon) + [-ca.inf] * self._state_dim
-        ubx = [ca.inf] * (self._state_dim
-                          + self._controls_dim) * (self._horizon) + [ca.inf] * self._state_dim
+        ubx = [ca.inf] * self._state_dim + [self._control_bounds[1]] * self._controls_dim
+        ubx = ubx * (self._horizon) + [ca.inf] * self._state_dim
         optimal_trajectory = self._solver(x0=self._V_initial,
                                           p=np.hstack((state, reference)), ubg=0, lbg=0,
                                           ubx=ubx, lbx=lbx)
