@@ -45,16 +45,9 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
 
 N_nmpc = 80
 nmpc = Nmpc(drone, dt, N_nmpc)
-# optimal_sol = nmpc.compute_control(np.zeros(6), np.zeros(6 * 8))
-# print(optimal_sol)
 
 reference_data = np.zeros([N, 6])
 control_data = np.zeros([N, 2])
-# reference_data[:, 0] = 1
-# reference_data[:, 1] = -1
-# reference_data[:int(N/4), 0] = np.linspace(0, 0, int(N/4))
-# reference_data[int(N/4):int(N/2), 0] = np.linspace(0, -0.5, int(N/4))
-# reference_data[int(N/2):, 0] = -0.5
 reference_data[:, 0] = np.sin(np.linspace(0, 1 * np.pi, N))
 reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
 
@@ -63,7 +56,6 @@ reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
 for i in range(N - N_nmpc):
     # error = estimated_state_data[i] - reference_data[i]
     # controls = controller.compute_controls(error)
-    # print(reference_data[i:i+8].flatten())
     controls = nmpc.compute_control(state_data[i], reference_data[i:i+N_nmpc].flatten())
     control_data[i] = controls.full().squeeze()
     state_data[i + 1] = drone.make_step(controls, dt)
