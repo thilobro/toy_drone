@@ -1,6 +1,8 @@
 from toy_drone.extended_kalman_filter import ExtendedKalmanFilter
 import casadi as ca
 
+# TODO: more tests, only build one test_kalman_filter
+
 
 def test_constructor():
     test_kalman_filter = ExtendedKalmanFilter(ca.vertcat(0), ca.vertcat(0),
