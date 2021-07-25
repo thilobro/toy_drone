@@ -4,6 +4,8 @@ import numpy as np
 
 
 def plot_drone_trajectory(trajectory_data, reference_data):
+    # TODO: Docstring
+    # TODO: legends
     fig, ax = plt.subplots(1)
     ax.plot(trajectory_data[:, 0], -trajectory_data[:, 1], alpha=0.2)
     for i in range(0, trajectory_data.shape[0], 20):
@@ -27,6 +29,8 @@ def plot_drone_trajectory(trajectory_data, reference_data):
 
 
 def plot_drone_states(trajectory_data, controls_data, dt):
+    # TODO: Docstring
+    # TODO: legends
     N = trajectory_data.shape[0]
     t = np.linspace(0, N*dt, N)
     fig, ax = plt.subplots(8)
