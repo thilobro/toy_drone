@@ -77,7 +77,8 @@ class Nmpc():
                'g': ca.vertcat(*equality_constraints), 'p': ca.vertcat(*params)}
 
         # build solver
-        self._solver = ca.nlpsol('solver', 'ipopt', nlp)
+        solver_options = {'ipopt': {'print_level': 0}, 'print_time': False}
+        self._solver = ca.nlpsol('solver', 'ipopt', nlp, solver_options)
 
     def compute_control(self, state, reference):
         # solve OCP
