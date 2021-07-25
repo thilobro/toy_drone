@@ -26,9 +26,11 @@ def plot_drone_trajectory(trajectory_data, reference_data):
     ax.set_aspect('equal')
 
 
-def plot_drone_states(trajectory_data, controls_data):
+def plot_drone_states(trajectory_data, controls_data, dt):
+    N = trajectory_data.shape[0]
+    t = np.linspace(0, N*dt, N)
     fig, ax = plt.subplots(8)
     for i in range(6):
-        ax[i].plot(trajectory_data[:, i])
-    ax[6].plot(controls_data[:, 0])
-    ax[7].plot(controls_data[:, 1])
+        ax[i].plot(t, trajectory_data[:, i])
+    ax[6].plot(t[:-1], controls_data[:, 0])
+    ax[7].plot(t[:-1], controls_data[:, 1])
