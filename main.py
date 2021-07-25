@@ -27,12 +27,7 @@ state_cost = np.diag([1, 1, 0, 0, 0, 0])
 control_cost = np.eye(2) * 1e-3
 lqr = Lqr(state_jacobian, control_jacobian, state_cost, control_cost, dt)
 
-
-def feedforward_law():
-    return hover_force
-
-
-lqr_controller = Controller(lqr.compute_control, feedforward_law, 1)
+lqr_controller = Controller(lqr.compute_control, lambda: hover_force, 1)
 
 initial_state = np.zeros(6)
 initial_controls = np.zeros(2)
@@ -63,7 +58,7 @@ nmpc_controller = Controller(nmpc.compute_control, lambda: 0, N_nmpc)
 
 # TODO: write unit tests
 
-closed_loop = ClosedLoop(drone, nmpc_controller, kalman_filter)
+closed_loop = ClosedLoop(drone, lqr_controller, kalman_filter)
 state_data, estimated_state_data, control_data = closed_loop.run_simulation(N, dt, reference_data)
 
 plot_drone_trajectory(state_data, reference_data)
