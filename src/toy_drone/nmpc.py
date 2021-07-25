@@ -5,25 +5,26 @@ from toy_drone.utils import rk4
 
 class Nmpc():
     # TODO: docstrings
-    def __init__(self, model):
+    def __init__(self, model, dt, N):
         self._ode = model.get_ode()
         self._state_dim = model.get_state_dim()
         self._controls_dim = model.get_controls_dim()
-        self._dt = 1e-1
-        self._horizon = 10
+        self._dt = dt
+        self._horizon = N
         self._ocp = self.build_ocp()
         self._V_initial = np.zeros((self._state_dim + self._controls_dim) * (self._horizon - 1))
+
     def model_step(self, state, controls):
         return rk4(self._ode, state, controls, self._dt)
 
     @staticmethod
     def running_cost(state, controls, dcontrols, reference):
-        controls = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2])\
-            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1e-2\
-            + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 1e-2\
-            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1e-1\
-            + ca.dot(dcontrols, dcontrols) * 1e-6\
-            + ca.dot(controls, controls) * 1e-6
+        controls = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
+            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1e-1\
+            + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 0\
+            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1e-4\
+            + ca.dot(controls, controls) * 1e-6\
+            + ca.dot(dcontrols, dcontrols) * 1e-2
         return controls
 
     def build_ocp(self):
@@ -52,6 +53,7 @@ class Nmpc():
                                      - ocp_variables[i][:self._state_dim]]
 
             # build path constraints if we have some
+            # TODO: add constraints on inputs
 
         # build nlp
         nlp = {'x': ca.vertcat(*ocp_variables), 'f': cost_function,
@@ -62,10 +64,17 @@ class Nmpc():
 
     def compute_control(self, state, reference):
         # solve OCP
+        lbx = [-ca.inf] * 6 + [0, 0]
+        lbx = lbx * (self._horizon - 1)
+        ubx = [ca.inf] * 8 * (self._horizon - 1)
         optimal_trajectory = self._solver(x0=self._V_initial,
-                                          p=np.hstack((state, reference)), ubg=0, lbg=0)
+                                          p=np.hstack((state, reference)), ubg=0, lbg=0,
+                                          ubx=ubx, lbx=lbx)
         # extract V_initial for next iteration
-        self._V_initial = optimal_trajectory['x'][:((self._state_dim + self._controls_dim)*(self._horizon - 1))]
-        print(optimal_trajectory['x'])
+        new_initial_guess = optimal_trajectory['x'][self._state_dim + self._controls_dim:((self._state_dim + self._controls_dim)*(self._horizon - 1))]
+        new_initial_guess = ca.vertcat(new_initial_guess, optimal_trajectory['x'][(self._state_dim + self._controls_dim) * (self._horizon - 2):(self._state_dim + self._controls_dim) * (self._horizon - 1)])
+        self._V_initial = new_initial_guess
+        optimal_controls = optimal_trajectory['x'][self._state_dim:self._state_dim + self._controls_dim]
+        # print(optimal_trajectory['x'])
         # extract first controls
-        return optimal_trajectory['x'][self._state_dim:self._state_dim + self._controls_dim]
+        return optimal_controls

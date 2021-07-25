@@ -4,17 +4,18 @@ from toy_drone.lqr import Lqr
 from toy_drone.controller import Controller
 from toy_drone.extended_kalman_filter import ExtendedKalmanFilter
 from toy_drone.plotting import plot_drone_trajectory
+from toy_drone.plotting import plot_drone_states
 from toy_drone.nmpc import Nmpc
 
 
-parameters = {"mass": 1, "moment_of_inertia": 10, "arm_length": 0.1,
+parameters = {"mass": 0.1, "moment_of_inertia": 0.1, "arm_length": 10,
               "gravity": 9.81, "max_force_input": 1000}
 hover_force = (parameters["mass"] * parameters["gravity"])/2.0
 print(hover_force)
 N = 1000
 state_data = np.zeros([N, 6])
 estimated_state_data = np.zeros([N, 6])
-dt = 1e-1
+dt = 5e-2
 drone = ToyDroneModel(parameters)
 
 state_jacobian = drone.get_state_jacobian()(np.zeros(6), hover_force * np.ones(2)).full().squeeze()
@@ -43,26 +44,30 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
                                      sensor_covariance, state_model, sensor_model,
                                      state_jacobian, sensor_jacobian, dt)
 
-nmpc = Nmpc(drone)
+N_nmpc = 100
+nmpc = Nmpc(drone, dt, N_nmpc)
 # optimal_sol = nmpc.compute_control(np.zeros(6), np.zeros(6 * 8))
 # print(optimal_sol)
 
 reference_data = np.zeros([N, 6])
 control_data = np.zeros([N, 2])
-reference_data[:, 1] = np.linspace(0, -10, N)
-# reference_data[:, 0] = np.linspace(0, 0.2, N)
-reference_data[:, 0] = np.sin(np.linspace(0, 1 * np.pi, N))
-reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
+reference_data[:, 0] = 1
+# reference_data[:, 1] = -1
+# reference_data[:int(N/4), 0] = np.linspace(0, 0, int(N/4))
+# reference_data[int(N/4):int(N/2), 0] = np.linspace(0, -0.5, int(N/4))
+# reference_data[int(N/2):, 0] = -0.5
+# reference_data[:, 0] = np.sin(np.linspace(0, 1 * np.pi, N))
+# reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
 
 # TODO: write unit tests
 
-for i in range(N - 10):
-# for i in range(2):
+for i in range(N - N_nmpc):
+# for i in range(300):
     # error = estimated_state_data[i] - reference_data[i]
     # controls = controller.compute_controls(error)
-    controls = nmpc.compute_control(estimated_state_data[i], reference_data[i:i+8].flatten())
+    # print(reference_data[i:i+8].flatten())
+    controls = nmpc.compute_control(state_data[i], reference_data[i:i+(N_nmpc-2)].flatten())
     control_data[i] = controls.full().squeeze()
-    print(controls)
     state_data[i + 1] = drone.make_step(controls, dt)
 
     sensor_values = drone.get_sensor_values()
@@ -70,8 +75,10 @@ for i in range(N - 10):
     kalman_filter.input_measurement(sensor_values)
     estimated_state_data[i + 1] = kalman_filter.get_estimate()
 
-plot_drone_trajectory(state_data, reference_data)
-import matplotlib.pyplot as plt
-plt.plot(control_data[:, 0])
-plt.plot(control_data[:, 1])
-plt.show()
+# plot_drone_trajectory(state_data, reference_data)
+plot_drone_states(state_data, control_data)
+# plt.plot(state_data[:, 1])
+# plt.plot(state_data[:, 3])
+# plt.plot(control_data[:, 0])
+# plt.plot(control_data[:, 1])
+# plt.show()
