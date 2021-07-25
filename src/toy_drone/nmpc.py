@@ -83,22 +83,27 @@ class Nmpc():
         solver_options = {'ipopt': {'print_level': 0}, 'print_time': False}
         self._solver = ca.nlpsol('solver', 'ipopt', nlp, solver_options)
 
-    def compute_control(self, state, reference):
-        # solve OCP
+    def _solve_ocp(self, state, reference):
         lbx = [-ca.inf] * self._state_dim + [self._control_bounds[0]] * self._controls_dim
         lbx = lbx * (self._horizon) + [-ca.inf] * self._state_dim
         ubx = [ca.inf] * self._state_dim + [self._control_bounds[1]] * self._controls_dim
         ubx = ubx * (self._horizon) + [ca.inf] * self._state_dim
-        optimal_trajectory = self._solver(x0=self._V_initial,
-                                          p=np.hstack((state, reference)), ubg=0, lbg=0,
-                                          ubx=ubx, lbx=lbx)
+        solution = self._solver(x0=self._V_initial, p=np.hstack((state, reference)), ubg=0, lbg=0,
+                                ubx=ubx, lbx=lbx)
+        return solution['x']
+
+    def _extract_initial_guess(self, optimal_trajectory):
+        initial_guess = optimal_trajectory[self._state_dim + self._controls_dim:]
+        initial_guess = ca.vertcat(initial_guess, [0] * self._controls_dim)
+        initial_guess = ca.vertcat(initial_guess, optimal_trajectory[-(self._state_dim):])
+        return initial_guess
+
+    def compute_control(self, state, reference):
+        # solve OCP
+        optimal_trajectory = self._solve_ocp(state, reference)
         # extract V_initial for next iteration
-        new_initial_guess = optimal_trajectory['x'][self._state_dim + self._controls_dim:]
-        new_initial_guess = ca.vertcat(new_initial_guess, [0] * self._controls_dim)
-        new_initial_guess = ca.vertcat(new_initial_guess,
-                                       optimal_trajectory['x'][-(self._state_dim):])
-        self._V_initial = new_initial_guess
+        self._V_initial = self._extract_initial_guess(optimal_trajectory)
         # extract first controls and apply
-        optimal_controls = optimal_trajectory['x'][self._state_dim:
-                                                   self._state_dim + self._controls_dim]
+        optimal_controls = optimal_trajectory[self._state_dim:
+                                              self._state_dim + self._controls_dim]
         return optimal_controls.full().squeeze()
