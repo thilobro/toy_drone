@@ -17,28 +17,28 @@ class Nmpc():
         self._R = control_running_cost
         self._Q_term = state_terminal_cost
         self._dR = dcontrol_running_cost
-        self._ocp = self.build_ocp()
+        self._ocp = self._build_ocp()
         self._V_initial = np.zeros((self._state_dim + self._controls_dim)
                                    * self._horizon + self._state_dim)
 
-    def model_step(self, state, controls):
+    def _model_step(self, state, controls):
         return rk4(self._ode, state, controls, self._dt)
 
     @staticmethod
-    def quadratic_norm(vector, matrix):
+    def _quadratic_norm(vector, matrix):
         return ca.mtimes(ca.mtimes(vector.T, matrix), vector)
 
-    def running_cost(self, state, controls, dcontrols, reference):
-        cost = self.quadratic_norm(state - reference, self._Q)\
-            + self.quadratic_norm(controls, self._R) + self.quadratic_norm(dcontrols, self._dR)
+    def _running_cost(self, state, controls, dcontrols, reference):
+        cost = self._quadratic_norm(state - reference, self._Q)\
+            + self._quadratic_norm(controls, self._R) + self._quadratic_norm(dcontrols, self._dR)
         return cost
 
-    def terminal_cost(self, state, reference):
-        cost = self.quadratic_norm(state - reference, self._Q_term)
+    def _terminal_cost(self, state, reference):
+        cost = self._quadratic_norm(state - reference, self._Q_term)
 
         return cost
 
-    def build_ocp(self):
+    def _build_ocp(self):
         ocp_variables = []
         ocp_variables += [ca.SX.sym('V0', self._state_dim + self._controls_dim)]
         params = []
@@ -53,25 +53,27 @@ class Nmpc():
 
             # build cost function
             params += [ca.SX.sym(f'ref{i}', self._state_dim)]
-            cost_function += self.running_cost(ocp_variables[i][:self._state_dim],
-                                               ocp_variables[i][self._state_dim:],
-                                               ocp_variables[i][self._state_dim:]
-                                               - ocp_variables[i-1][self._state_dim:],
-                                               params[i])
+            cost_function += self._running_cost(ocp_variables[i][:self._state_dim],
+                                                ocp_variables[i][self._state_dim:],
+                                                ocp_variables[i][self._state_dim:]
+                                                - ocp_variables[i-1][self._state_dim:],
+                                                params[i])
 
             # build MS constraints
-            equality_constraints += [self.model_step(ocp_variables[i - 1][:self._state_dim],
-                                                     ocp_variables[i - 1][self._state_dim:])
+            equality_constraints += [self._model_step(ocp_variables[i - 1][:self._state_dim],
+                                                      ocp_variables[i - 1][self._state_dim:])
                                      - ocp_variables[i][:self._state_dim]]
 
         # add terminal cost and constraints
         ocp_variables += [ca.SX.sym(f'V{self._horizon}', self._state_dim)]
-        equality_constraints += [self.model_step(ocp_variables[self._horizon - 1][:self._state_dim],
-                                                 ocp_variables[self._horizon - 1][self._state_dim:])
+        equality_constraints += [self._model_step(ocp_variables[self._horizon - 1]
+                                                  [:self._state_dim],
+                                                  ocp_variables[self._horizon - 1]
+                                                  [self._state_dim:])
                                  - ocp_variables[self._horizon][:self._state_dim]]
         params += [ca.SX.sym(f'ref{self._horizon}', self._state_dim)]
-        cost_function += self.terminal_cost(ocp_variables[self._horizon][:self._state_dim],
-                                            params[self._horizon])
+        cost_function += self._terminal_cost(ocp_variables[self._horizon][:self._state_dim],
+                                             params[self._horizon])
 
         # build nlp
         nlp = {'x': ca.vertcat(*ocp_variables), 'f': cost_function,
