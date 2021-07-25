@@ -11,7 +11,6 @@ from toy_drone.nmpc import Nmpc
 parameters = {"mass": 0.1, "moment_of_inertia": 0.1, "arm_length": 10,
               "gravity": 9.81, "max_force_input": 1000}
 hover_force = (parameters["mass"] * parameters["gravity"])/2.0
-print(hover_force)
 N = 1000
 state_data = np.zeros([N, 6])
 estimated_state_data = np.zeros([N, 6])
@@ -51,13 +50,13 @@ nmpc = Nmpc(drone, dt, N_nmpc)
 
 reference_data = np.zeros([N, 6])
 control_data = np.zeros([N, 2])
-reference_data[:, 0] = 1
+# reference_data[:, 0] = 1
 # reference_data[:, 1] = -1
 # reference_data[:int(N/4), 0] = np.linspace(0, 0, int(N/4))
 # reference_data[int(N/4):int(N/2), 0] = np.linspace(0, -0.5, int(N/4))
 # reference_data[int(N/2):, 0] = -0.5
-# reference_data[:, 0] = np.sin(np.linspace(0, 1 * np.pi, N))
-# reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
+reference_data[:, 0] = np.sin(np.linspace(0, 1 * np.pi, N))
+reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
 
 # TODO: write unit tests
 
@@ -74,5 +73,5 @@ for i in range(N - N_nmpc):
     kalman_filter.input_measurement(sensor_values)
     estimated_state_data[i + 1] = kalman_filter.get_estimate()
 
-# plot_drone_trajectory(state_data, reference_data)
-plot_drone_states(state_data, control_data)
+plot_drone_trajectory(state_data, reference_data)
+# plot_drone_states(state_data, control_data)

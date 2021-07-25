@@ -56,10 +56,6 @@ class Nmpc():
                                                      ocp_variables[i - 1][self._state_dim:])
                                      - ocp_variables[i][:self._state_dim]]
 
-            # build path constraints if we have some
-            # TODO: add constraints on inputs
-            print(i)
-
         # add terminal cost and constraints
         ocp_variables += [ca.SX.sym(f'V{self._horizon}', self._state_dim)]
         equality_constraints += [self.model_step(ocp_variables[self._horizon - 1][:self._state_dim],
@@ -89,7 +85,6 @@ class Nmpc():
         new_initial_guess = ca.vertcat(new_initial_guess, [0, 0])
         new_initial_guess = ca.vertcat(new_initial_guess, optimal_trajectory['x'][-(self._state_dim):])
         self._V_initial = new_initial_guess
+        # extract first controls and apply
         optimal_controls = optimal_trajectory['x'][self._state_dim:self._state_dim + self._controls_dim]
-        # print(optimal_trajectory['x'])
-        # extract first controls
         return optimal_controls
