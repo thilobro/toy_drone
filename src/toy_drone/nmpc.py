@@ -29,7 +29,12 @@ class Nmpc():
 
     @staticmethod
     def terminal_cost(state, reference):
-        return ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1
+        cost = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
+            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1\
+            + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 1\
+            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1\
+
+        return cost
 
     def build_ocp(self):
         ocp_variables = []

@@ -14,7 +14,7 @@ hover_force = (parameters["mass"] * parameters["gravity"])/2.0
 N = 1000
 state_data = np.zeros([N, 6])
 estimated_state_data = np.zeros([N, 6])
-dt = 5e-2
+dt = 1e-1
 drone = ToyDroneModel(parameters)
 
 state_jacobian = drone.get_state_jacobian()(np.zeros(6), hover_force * np.ones(2)).full().squeeze()
@@ -43,13 +43,13 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
                                      sensor_covariance, state_model, sensor_model,
                                      state_jacobian, sensor_jacobian, dt)
 
-N_nmpc = 80
+N_nmpc = 40
 nmpc = Nmpc(drone, dt, N_nmpc)
 
 reference_data = np.zeros([N, 6])
 control_data = np.zeros([N, 2])
-reference_data[:, 0] = np.sin(np.linspace(0, 1 * np.pi, N))
-reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 1 * np.pi, N))
+reference_data[:, 0] = np.sin(np.linspace(0, 2 * np.pi, N))
+reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N))
 
 # TODO: write unit tests
 
