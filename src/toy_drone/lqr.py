@@ -2,10 +2,47 @@ import numpy as np
 
 
 class Lqr():
-    # TODO: docstrings
+    """
+    Lqr Linear Quadratic Regulator.
+    """
+
     def __init__(self, state_jacobian, control_jacobian, state_cost, control_cost, dt):
+        """
+        __init__ Constructor.
+
+        Args:
+            state_jacobian: State jacobian df/dx(x, u) evaluated at a operating point
+            control_jacobian: control jacobian df/du(x, u) evaluated at a operating point
+            state_cost: Quadratic state cost tuning matrix
+            control_cost: Quadratic control cost tuning matrix
+            dt: Discretization time step
+        """
         A, B = self.discretize_jacobians(state_jacobian, control_jacobian, dt)
-        self.compute_and_set_optimal_feedback(A, B, state_cost, control_cost)
+        self.compute_and_set_optimal_feedback_matrix(A, B, state_cost, control_cost)
+
+    def compute_and_set_optimal_feedback_matrix(self, A, B, Q, R):
+        """
+        compute_and_set_optimal_feedback_matrix Computes the optimal feedbakc gain by solving
+        the DARE.
+
+        Args:
+            A: Discrete state jacobian at operating point
+            B: Discrete control jacobian at operating point
+            Q: Quadratic state cost tuning matrix
+            R: Quadratic control cost tuning matrix
+        """
+        P = self.solve_ricatti_recursion(A, B, Q, R)
+        self._K = np.linalg.inv(R + B.transpose() @ P @ B) @ B.transpose() @ P @ A
+
+    def compute_control(self, state, reference):
+        """
+        compute_control Compute a control with the optimal feedback gain K.
+
+        Args:
+            state: state at which control should be computed
+            reference: Reference used for error computation
+        """
+        return -self._K @ (state - reference)
 
     @staticmethod
     def solve_ricatti_recursion(A, B, Q, R, max_iterations=1000, epsilon=1e-8):
@@ -17,13 +54,6 @@ class Lqr():
                 break
             P = P_new
         return P
-
-    def compute_and_set_optimal_feedback(self, A, B, Q, R):
-        P = self.solve_ricatti_recursion(A, B, Q, R)
-        self._K = np.linalg.inv(R + B.transpose() @ P @ B) @ B.transpose() @ P @ A
-
-    def compute_control(self, state, reference):
-        return -self._K @ (state - reference)
 
     @staticmethod
     def discretize_jacobians(state_jacobian, control_jacobian, dt):

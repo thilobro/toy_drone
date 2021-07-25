@@ -3,10 +3,28 @@ from toy_drone.utils import rk4
 
 
 class ExtendedKalmanFilter():
-    # TODO: docstrings
+    """
+    ExtendedKalmanFilter Extended Kalman Filter implementation with correction and prediction step
+    that are performed when a new sensor value is input.
+    """
+
     def __init__(self, initial_state, initial_controls, state_covariance,
                  sensor_covariance, state_model, sensor_model, state_jacobian,
                  sensor_jacobian, dt):
+        """
+        __init__ Constructor.
+
+        Args:
+            initial_state: Initial state at which estimation is started
+            initial_controls: Initial controls at which estimation is started
+            state_covariance: Tuning matrix for the state covariance
+            sensor_covariance: Tuning matrix for the sensor covariance
+            state_model: Model ode of the system in the form of a casadi function
+            sensor_model: Sensor model in the form of a casadi function
+            state_jacobian: State jacobian as a casadi function of state and controls
+            sensor_jacobian: Sensor jacobian as a casadi function of state and controls
+            dt: Discretization time step
+        """
         self._state_covariance = state_covariance
         self._sensor_covariance = sensor_covariance
         self._state_model = state_model
@@ -19,7 +37,15 @@ class ExtendedKalmanFilter():
         self._dt = dt
 
     def _correction_step(self, measurement):
-        # TODO: state and sensor jacobians must be functions
+        """
+        _correction_step Performs a correction step for a sensor measurement. Corrects the estimated
+        state and the estimated covariance. Before the correction step, we always perform a
+        prediction step first.
+
+        Args:
+            measurement: Sensor measurement of all sensor measurements y for the sensor
+            equation y = h(x, u)
+        """
         self._prediction_step()
         measurement_residual = measurement - self._sensor_model(self._estimated_state,
                                                                 self._controls).full().squeeze()
@@ -32,7 +58,10 @@ class ExtendedKalmanFilter():
                                       - kalman_gain @ H) @ self._estimated_covariance
 
     def _prediction_step(self):
-        # TODO: state and sensor jacobians must be functions
+        """
+        _prediction_step Performs a prediction step with the model. Predicts estimated state and
+        estimated covariance.
+        """
         self._estimated_state = rk4(self._state_model, self._estimated_state,
                                     self._controls, self._dt).full().squeeze()
 
@@ -41,6 +70,13 @@ class ExtendedKalmanFilter():
             + self._state_covariance
 
     def input_measurement(self, measurement):
+        """
+        input_measurement Input a sensor measurement and perform a correction step with it.
+
+        Args:
+            measurement: Sensor measurement of all sensor measurements y for the sensor
+            equation y = h(x, u)
+        """
         self._correction_step(measurement)
 
     def input_controls(self, controls):
