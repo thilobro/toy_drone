@@ -62,11 +62,10 @@ reference_data[:, 0] = 1
 # TODO: write unit tests
 
 for i in range(N - N_nmpc):
-# for i in range(300):
     # error = estimated_state_data[i] - reference_data[i]
     # controls = controller.compute_controls(error)
     # print(reference_data[i:i+8].flatten())
-    controls = nmpc.compute_control(state_data[i], reference_data[i:i+(N_nmpc-1)].flatten())
+    controls = nmpc.compute_control(state_data[i], reference_data[i:i+N_nmpc].flatten())
     control_data[i] = controls.full().squeeze()
     state_data[i + 1] = drone.make_step(controls, dt)
 
@@ -77,8 +76,3 @@ for i in range(N - N_nmpc):
 
 # plot_drone_trajectory(state_data, reference_data)
 plot_drone_states(state_data, control_data)
-# plt.plot(state_data[:, 1])
-# plt.plot(state_data[:, 3])
-# plt.plot(control_data[:, 0])
-# plt.plot(control_data[:, 1])
-# plt.show()
