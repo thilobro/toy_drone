@@ -12,8 +12,9 @@ from toy_drone.closed_loop import ClosedLoop
 # TODO: write unit tests
 
 # define discretization parameters
-N = 1000
+simulation_time = 100
 dt = 1e-1
+N = int(simulation_time/dt)
 
 # set up model
 parameters = {"mass": 1, "moment_of_inertia": 1, "arm_length": 1,
