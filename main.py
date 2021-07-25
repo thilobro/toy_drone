@@ -60,10 +60,10 @@ reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N + N_nmpc))
 
 # TODO: write unit tests
 
+
 for i in range(N - 1):
-    # error = estimated_state_data[i] - reference_data[i]
-    # controls = controller.compute_controls(error)
-    controls = nmpc.compute_control(state_data[i], reference_data[i:i + N_nmpc].flatten())
+    controls = controller.compute_controls(estimated_state_data[i], reference_data[i])
+    # controls = nmpc.compute_control(estimated_state_data[i], reference_data[i:i + N_nmpc].flatten())
     control_data[i] = controls
     state_data[i + 1] = drone.make_step(controls, dt)
 

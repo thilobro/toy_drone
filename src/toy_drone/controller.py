@@ -4,5 +4,5 @@ class Controller():
         self._feedback_law = feedback_law
         self._feedforward_law = feedforward_law
 
-    def compute_controls(self, error):
-        return self._feedback_law(error) + self._feedforward_law()
+    def compute_controls(self, estimate, reference):
+        return self._feedback_law(estimate, reference) + self._feedforward_law()

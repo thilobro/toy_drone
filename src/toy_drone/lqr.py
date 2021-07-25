@@ -22,8 +22,8 @@ class Lqr():
         P = self.solve_ricatti_recursion(A, B, Q, R)
         self._K = np.linalg.inv(R + B.transpose() @ P @ B) @ B.transpose() @ P @ A
 
-    def compute_control(self, control_error):
-        return -self._K @ control_error
+    def compute_control(self, state, reference):
+        return -self._K @ (state - reference)
 
     @staticmethod
     def discretize_jacobians(state_jacobian, control_jacobian, dt):
