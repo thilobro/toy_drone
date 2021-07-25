@@ -12,7 +12,8 @@ class Nmpc():
         self._dt = dt
         self._horizon = N
         self._ocp = self.build_ocp()
-        self._V_initial = np.zeros((self._state_dim + self._controls_dim) * self._horizon + self._state_dim)
+        self._V_initial = np.zeros((self._state_dim + self._controls_dim)
+                                   * self._horizon + self._state_dim)
 
     def model_step(self, state, controls):
         return rk4(self._ode, state, controls, self._dt)
@@ -55,7 +56,8 @@ class Nmpc():
             params += [ca.SX.sym(f'ref{i}', self._state_dim)]
             cost_function += self.running_cost(ocp_variables[i][:self._state_dim],
                                                ocp_variables[i][self._state_dim:],
-                                               ocp_variables[i][self._state_dim:] - ocp_variables[i-1][self._state_dim:],
+                                               ocp_variables[i][self._state_dim:]
+                                               - ocp_variables[i-1][self._state_dim:],
                                                params[i])
 
             # build MS constraints
@@ -70,7 +72,7 @@ class Nmpc():
                                  - ocp_variables[self._horizon][:self._state_dim]]
         params += [ca.SX.sym(f'ref{self._horizon}', self._state_dim)]
         cost_function += self.terminal_cost(ocp_variables[self._horizon][:self._state_dim],
-                                       params[self._horizon])
+                                            params[self._horizon])
 
         # build nlp
         nlp = {'x': ca.vertcat(*ocp_variables), 'f': cost_function,
@@ -91,8 +93,10 @@ class Nmpc():
         # extract V_initial for next iteration
         new_initial_guess = optimal_trajectory['x'][self._state_dim + self._controls_dim:]
         new_initial_guess = ca.vertcat(new_initial_guess, [0, 0])
-        new_initial_guess = ca.vertcat(new_initial_guess, optimal_trajectory['x'][-(self._state_dim):])
+        new_initial_guess = ca.vertcat(new_initial_guess,
+                                       optimal_trajectory['x'][-(self._state_dim):])
         self._V_initial = new_initial_guess
         # extract first controls and apply
-        optimal_controls = optimal_trajectory['x'][self._state_dim:self._state_dim + self._controls_dim]
+        optimal_controls = optimal_trajectory['x'][self._state_dim:
+                                                   self._state_dim + self._controls_dim]
         return optimal_controls
