@@ -24,7 +24,7 @@ def plot_drone_trajectory(trajectory_data, reference_data):
         ax.add_patch(arrow_attitude)
     ax.plot(reference_data[:, 0], -reference_data[:, 1], '--')
     # ax.set_aspect('equal')
-    plt.show()
+    # plt.show()
 
 
 def plot_drone_states(trajectory_data, controls_data):
@@ -33,4 +33,4 @@ def plot_drone_states(trajectory_data, controls_data):
         ax[i].plot(trajectory_data[:, i])
     ax[6].plot(controls_data[:, 0])
     ax[7].plot(controls_data[:, 1])
-    plt.show()
+    # plt.show()

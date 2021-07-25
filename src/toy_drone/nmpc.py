@@ -19,6 +19,7 @@ class Nmpc():
 
     @staticmethod
     def running_cost(state, controls, dcontrols, reference):
+        # TODO: tuning should come frome outside
         cost = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
             + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 0\
             + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 0\
@@ -29,6 +30,7 @@ class Nmpc():
 
     @staticmethod
     def terminal_cost(state, reference):
+        # TODO: tuning should come frome outside
         cost = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
             + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1\
             + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 1\
