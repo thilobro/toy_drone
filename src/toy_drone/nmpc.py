@@ -20,16 +20,16 @@ class Nmpc():
     @staticmethod
     def running_cost(state, controls, dcontrols, reference):
         cost = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
-            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1e-1\
+            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 0\
             + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 0\
-            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1e-4\
+            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1e-3\
             + ca.dot(controls, controls) * 1e-6\
             + ca.dot(dcontrols, dcontrols) * 1e-2
         return cost
 
     @staticmethod
     def terminal_cost(state, reference):
-        return ca.dot(state[:2] - reference[:2], state[:2] - reference[:2])
+        return ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1
 
     def build_ocp(self):
         ocp_variables = []
