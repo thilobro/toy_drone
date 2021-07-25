@@ -44,7 +44,7 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
                                      sensor_covariance, state_model, sensor_model,
                                      state_jacobian, sensor_jacobian, dt)
 
-N_nmpc = 100
+N_nmpc = 80
 nmpc = Nmpc(drone, dt, N_nmpc)
 # optimal_sol = nmpc.compute_control(np.zeros(6), np.zeros(6 * 8))
 # print(optimal_sol)
@@ -66,7 +66,7 @@ for i in range(N - N_nmpc):
     # error = estimated_state_data[i] - reference_data[i]
     # controls = controller.compute_controls(error)
     # print(reference_data[i:i+8].flatten())
-    controls = nmpc.compute_control(state_data[i], reference_data[i:i+(N_nmpc-2)].flatten())
+    controls = nmpc.compute_control(state_data[i], reference_data[i:i+(N_nmpc-1)].flatten())
     control_data[i] = controls.full().squeeze()
     state_data[i + 1] = drone.make_step(controls, dt)
 

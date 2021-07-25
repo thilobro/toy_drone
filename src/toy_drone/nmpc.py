@@ -19,13 +19,17 @@ class Nmpc():
 
     @staticmethod
     def running_cost(state, controls, dcontrols, reference):
-        controls = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
+        cost = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
             + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1e-1\
             + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 0\
             + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1e-4\
             + ca.dot(controls, controls) * 1e-6\
             + ca.dot(dcontrols, dcontrols) * 1e-2
-        return controls
+        return cost
+
+    @staticmethod
+    def terminal_cost(state, reference):
+        return ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 10
 
     def build_ocp(self):
         ocp_variables = []
@@ -54,6 +58,11 @@ class Nmpc():
 
             # build path constraints if we have some
             # TODO: add constraints on inputs
+
+        # add terminal cost
+        params += [ca.SX.sym(f'ref{self._horizon - 1}', self._state_dim)]
+        cost_function += self.terminal_cost(ocp_variables[self._horizon - 2][:self._state_dim],
+                                       params[self._horizon - 1])
 
         # build nlp
         nlp = {'x': ca.vertcat(*ocp_variables), 'f': cost_function,
