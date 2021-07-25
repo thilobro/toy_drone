@@ -82,19 +82,20 @@ class Nmpc():
 
     def compute_control(self, state, reference):
         # solve OCP
-        lbx = [-ca.inf] * 6 + [0, 0]
-        lbx = lbx * (self._horizon) + [-ca.inf] * 6
-        ubx = [ca.inf] * 8 * (self._horizon) + [ca.inf] * 6
+        lbx = [-ca.inf] * self._state_dim + [0] * self._controls_dim
+        lbx = lbx * (self._horizon) + [-ca.inf] * self._state_dim
+        ubx = [ca.inf] * (self._state_dim
+                          + self._controls_dim) * (self._horizon) + [ca.inf] * self._state_dim
         optimal_trajectory = self._solver(x0=self._V_initial,
                                           p=np.hstack((state, reference)), ubg=0, lbg=0,
                                           ubx=ubx, lbx=lbx)
         # extract V_initial for next iteration
         new_initial_guess = optimal_trajectory['x'][self._state_dim + self._controls_dim:]
-        new_initial_guess = ca.vertcat(new_initial_guess, [0, 0])
+        new_initial_guess = ca.vertcat(new_initial_guess, [0] * self._controls_dim)
         new_initial_guess = ca.vertcat(new_initial_guess,
                                        optimal_trajectory['x'][-(self._state_dim):])
         self._V_initial = new_initial_guess
         # extract first controls and apply
         optimal_controls = optimal_trajectory['x'][self._state_dim:
                                                    self._state_dim + self._controls_dim]
-        return optimal_controls
+        return optimal_controls.full().squeeze()

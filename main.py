@@ -62,8 +62,7 @@ for i in range(N - 1):
     # error = estimated_state_data[i] - reference_data[i]
     # controls = controller.compute_controls(error)
     controls = nmpc.compute_control(state_data[i], reference_data[i:i + N_nmpc].flatten())
-    control_data[i] = controls.full().squeeze()
-    # control_data[i] = controls
+    control_data[i] = controls
     state_data[i + 1] = drone.make_step(controls, dt)
 
     sensor_values = drone.get_sensor_values()
