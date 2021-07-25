@@ -7,6 +7,7 @@ from toy_drone.extended_kalman_filter import ExtendedKalmanFilter
 from toy_drone.plotting import plot_drone_trajectory
 from toy_drone.plotting import plot_drone_states
 from toy_drone.nmpc import Nmpc
+from toy_drone.closed_loop import ClosedLoop
 
 
 parameters = {"mass": 1, "moment_of_inertia": 1, "arm_length": 1,
@@ -31,7 +32,7 @@ def feedforward_law():
     return hover_force
 
 
-controller = Controller(lqr.compute_control, feedforward_law)
+lqr_controller = Controller(lqr.compute_control, feedforward_law, 1)
 
 initial_state = np.zeros(6)
 initial_controls = np.zeros(2)
@@ -58,19 +59,12 @@ control_data = np.zeros([N - 1, 2])
 reference_data[:, 0] = np.sin(np.linspace(0, 2 * np.pi, N + N_nmpc))
 reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N + N_nmpc))
 
+nmpc_controller = Controller(nmpc.compute_control, lambda: 0, N_nmpc)
+
 # TODO: write unit tests
 
-
-for i in range(N - 1):
-    controls = controller.compute_controls(estimated_state_data[i], reference_data[i])
-    # controls = nmpc.compute_control(estimated_state_data[i], reference_data[i:i + N_nmpc].flatten())
-    control_data[i] = controls
-    state_data[i + 1] = drone.make_step(controls, dt)
-
-    sensor_values = drone.get_sensor_values()
-    kalman_filter.input_controls(controls)
-    kalman_filter.input_measurement(sensor_values)
-    estimated_state_data[i + 1] = kalman_filter.get_estimate()
+closed_loop = ClosedLoop(drone, nmpc_controller, kalman_filter)
+state_data, estimated_state_data, control_data = closed_loop.run_simulation(N, dt, reference_data)
 
 plot_drone_trajectory(state_data, reference_data)
 plot_drone_states(state_data, control_data)
