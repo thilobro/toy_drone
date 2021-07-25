@@ -45,7 +45,11 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
                                      state_jacobian, sensor_jacobian, dt)
 
 N_nmpc = 40
-nmpc = Nmpc(drone, dt, N_nmpc)
+Q = np.diag([1, 1, 0, 0, 0, 1e-3])
+Q_term = np.diag([1, 1, 1, 1, 1, 1])
+R = np.diag([1, 1]) * 1e-6
+dR = np.diag([1, 1]) * 1e-2
+nmpc = Nmpc(drone, Q, Q_term, R, dR, dt, N_nmpc)
 
 reference_data = np.zeros([N + N_nmpc, 6])
 control_data = np.zeros([N - 1, 2])

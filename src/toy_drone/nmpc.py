@@ -5,12 +5,17 @@ from toy_drone.utils import rk4
 
 class Nmpc():
     # TODO: docstrings
-    def __init__(self, model, dt, N):
+    def __init__(self, model, state_running_cost, state_terminal_cost,
+                 control_running_cost, dcontrol_running_cost, dt, N):
         self._ode = model.get_ode()
         self._state_dim = model.get_state_dim()
         self._controls_dim = model.get_controls_dim()
         self._dt = dt
         self._horizon = N
+        self._Q = state_running_cost
+        self._R = control_running_cost
+        self._Q_term = state_terminal_cost
+        self._dR = dcontrol_running_cost
         self._ocp = self.build_ocp()
         self._V_initial = np.zeros((self._state_dim + self._controls_dim)
                                    * self._horizon + self._state_dim)
@@ -19,23 +24,16 @@ class Nmpc():
         return rk4(self._ode, state, controls, self._dt)
 
     @staticmethod
-    def running_cost(state, controls, dcontrols, reference):
-        # TODO: tuning should come frome outside
-        cost = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
-            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 0\
-            + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 0\
-            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1e-3\
-            + ca.dot(controls, controls) * 1e-6\
-            + ca.dot(dcontrols, dcontrols) * 1e-2
+    def quadratic_norm(vector, matrix):
+        return ca.mtimes(ca.mtimes(vector.T, matrix), vector)
+
+    def running_cost(self, state, controls, dcontrols, reference):
+        cost = self.quadratic_norm(state - reference, self._Q)\
+            + self.quadratic_norm(controls, self._R) + self.quadratic_norm(dcontrols, self._dR)
         return cost
 
-    @staticmethod
-    def terminal_cost(state, reference):
-        # TODO: tuning should come frome outside
-        cost = ca.dot(state[:2] - reference[:2], state[:2] - reference[:2]) * 1\
-            + ca.dot(state[2:4] - reference[2:4], state[2:4] - reference[2:4]) * 1\
-            + ca.dot(state[4] - reference[4], state[4] - reference[4]) * 1\
-            + ca.dot(state[5] - reference[5], state[5] - reference[5]) * 1\
+    def terminal_cost(self, state, reference):
+        cost = self.quadratic_norm(state - reference, self._Q_term)
 
         return cost
 
