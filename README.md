@@ -4,4 +4,4 @@ A work in progress project for rapid prototyping of different controller and est
 with toy models.
 
 # How to use?
-Run `pip3 install -e .` in the root folder. Then run `python3 main.py`.
+Run `pip3 install -e .` in the root folder. Then run `python3 ./examples/[example]`.
