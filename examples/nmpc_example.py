@@ -35,10 +35,10 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
 
 # set up nmpc
 N_nmpc = 40
-Q = np.diag([1, 1, 0, 0, 0, 1e-3])
+Q = np.diag([1, 1, 0, 0, 0, 0])
 Q_term = np.diag([1, 1, 1, 1, 1, 1])
 R = np.diag([1, 1]) * 1e-6
-dR = np.diag([1, 1]) * 1e-2
+dR = np.diag([1, 1]) * 1e-3
 control_bounds = [0, parameters["max_force_input"]]
 nmpc = Nmpc(drone, Q, Q_term, R, dR, control_bounds, dt, N_nmpc)
 nmpc_controller = Controller(nmpc.compute_control, lambda: 0, N_nmpc)
