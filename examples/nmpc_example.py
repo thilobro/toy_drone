@@ -9,8 +9,8 @@ from toy_drone.nmpc import Nmpc
 from toy_drone.closed_loop import ClosedLoop
 
 # define discretization parameters
-simulation_time = 100
-dt = 1e-1
+simulation_time = 10
+dt = 5 * 1e-1
 N = int(simulation_time/dt)
 
 # set up model
@@ -48,8 +48,9 @@ closed_loop = ClosedLoop(drone, nmpc_controller, kalman_filter)
 
 # set up reference
 reference_data = np.zeros([N + N_nmpc, 6])
-reference_data[:, 0] = np.sin(np.linspace(0, 2 * np.pi, N + N_nmpc))
-reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N + N_nmpc))
+reference_data[:, 0] = 1
+# reference_data[:, 0] = np.sin(np.linspace(0, 2 * np.pi, N + N_nmpc))
+# reference_data[:, 1] = -1 + np.cos(-np.linspace(0, 2 * np.pi, N + N_nmpc))
 
 # run simulation
 state_data, estimated_state_data, control_data = closed_loop.run_simulation(N, dt, reference_data)
