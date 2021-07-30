@@ -4,8 +4,16 @@ import numpy as np
 
 
 def plot_drone_trajectory(trajectory_data, reference_data):
-    # TODO: Docstring
-    # TODO: legends
+    """
+    plot_drone_trajectory Plots the drone's trajectory on a x-z plot with negative z axis drawn up
+    for intuitive visualization. Drone position is drawn blue with a green dot every few samples,
+    velocity a red vector, orientation a black vector facing up.
+    Reference position is shown dashed.
+
+    Args:
+        trajectory_data: array with the trajectory data
+        reference_data: array with the reference_data
+    """
     fig, ax = plt.subplots(1)
     fig.suptitle("Drone position, orientation and velocity in a x-z plot")
     ax.set_xlabel("x position in [m]")
@@ -32,8 +40,16 @@ def plot_drone_trajectory(trajectory_data, reference_data):
 
 
 def plot_drone_states_and_controls(trajectory_data, reference_data, controls_data, dt):
-    # TODO: Docstring
-    # TODO: legends
+    """
+    plot_drone_states_and_controls Subplots for every drone state and control. Reference is drawn
+    dashed.
+
+    Args:
+        trajectory_data: array with the trajectory data
+        reference_data: array with the reference_data
+        controls_data: array with the controls_data
+        dt: discretization timestep
+    """
     N = trajectory_data.shape[0]
     t = np.linspace(0, N*dt, N)
     label_list = ["pos x [m]", "pos y [m]", "vel x [m/s]", "vel z [m/s]",
