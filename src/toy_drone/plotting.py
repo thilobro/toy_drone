@@ -52,7 +52,7 @@ def plot_drone_states_and_controls(trajectory_data, reference_data, controls_dat
     """
     N = trajectory_data.shape[0]
     t = np.linspace(0, N*dt, N)
-    label_list = ["pos x [m]", "pos y [m]", "vel x [m/s]", "vel z [m/s]",
+    label_list = ["pos x [m]", "pos z [m]", "vel x [m/s]", "vel z [m/s]",
                   "orientation [rad]", "ang vel [rad/s]",
                   "left prop [N]", "right prop [N]"]
     fig, ax = plt.subplots(8, sharex="all")
