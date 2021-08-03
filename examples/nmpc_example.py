@@ -4,7 +4,7 @@ from toy_drone.model import ToyDroneModel
 from toy_drone.controller import Controller
 from toy_drone.extended_kalman_filter import ExtendedKalmanFilter
 from toy_drone.plotting import plot_drone_trajectory
-from toy_drone.plotting import plot_drone_states
+from toy_drone.plotting import plot_drone_states_and_controls
 from toy_drone.nmpc import Nmpc
 from toy_drone.closed_loop import ClosedLoop
 
@@ -35,10 +35,10 @@ kalman_filter = ExtendedKalmanFilter(initial_state, initial_controls, state_cova
 
 # set up nmpc
 N_nmpc = 40
-Q = np.diag([1, 1, 0, 0, 0, 1e-3])
+Q = np.diag([1, 1, 0, 0, 0, 0])
 Q_term = np.diag([1, 1, 1, 1, 1, 1])
 R = np.diag([1, 1]) * 1e-6
-dR = np.diag([1, 1]) * 1e-2
+dR = np.diag([1, 1]) * 1e-3
 control_bounds = [0, parameters["max_force_input"]]
 nmpc = Nmpc(drone, Q, Q_term, R, dR, control_bounds, dt, N_nmpc)
 nmpc_controller = Controller(nmpc.compute_control, lambda: 0, N_nmpc)
@@ -57,5 +57,5 @@ state_data, estimated_state_data, control_data = closed_loop.run_simulation(N, d
 
 # plot results
 plot_drone_trajectory(state_data, reference_data)
-plot_drone_states(state_data, control_data, dt)
+plot_drone_states_and_controls(state_data, reference_data, control_data, dt)
 plt.show()
